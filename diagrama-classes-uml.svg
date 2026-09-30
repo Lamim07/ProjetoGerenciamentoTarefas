@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900">
+  <defs>
+    <style>
+      text{font-family:Segoe UI,Arial,sans-serif;fill:#203047}
+      .title{font-size:30px;font-weight:700}
+      .name{font-size:22px;font-weight:700}
+      .body{font-size:17px}
+      .small{font-size:15px;fill:#53647d}
+      .line{stroke:#566782;stroke-width:2.5;fill:none}
+      .box{fill:white;stroke:#7c8da6;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1500" height="900" fill="#eef2f8"/>
+  <text x="65" y="65" class="title">Diagrama de Classes UML — Gerenciamento de Tarefas</text>
+  <text x="65" y="95" class="small">Modelo de domínio • cardinalidades e papéis explícitos</text>
+
+  <!-- Associations behind classes -->
+  <path class="line" d="M590 304 H675 V259 H785"/>
+  <path class="line" d="M590 380 H708 V344 H785"/>
+  <text x="604" y="289" class="small">1</text>
+  <text x="748" y="245" class="small">0..*</text>
+  <text x="628" y="280" class="small">criador</text>
+  <text x="604" y="402" class="small">1</text>
+  <text x="748" y="334" class="small">0..*</text>
+  <text x="630" y="400" class="small">responsável</text>
+  <path class="line" d="M1100 338 H1175 V240 H1220"/>
+  <path class="line" d="M1100 420 H1175 V535 H1220"/>
+  <text x="1108" y="326" class="small">1</text>
+  <text x="1190" y="224" class="small">1</text>
+  <text x="1108" y="439" class="small">1</text>
+  <text x="1190" y="525" class="small">1</text>
+
+  <!-- Usuario -->
+  <rect x="65" y="170" width="525" height="385" rx="8" class="box"/>
+  <rect x="65" y="170" width="525" height="55" rx="8" fill="#dce8ff"/>
+  <text x="328" y="206" text-anchor="middle" class="name">Usuario</text>
+  <line x1="65" y1="225" x2="590" y2="225" class="line"/>
+  <text x="88" y="258" class="body">+ id: Long</text>
+  <text x="88" y="290" class="body">+ nome: String</text>
+  <text x="88" y="322" class="body">+ nomeUsuario: String</text>
+  <text x="88" y="354" class="body">+ email: String</text>
+  <text x="88" y="386" class="body">− senhaHash: String</text>
+  <line x1="65" y1="410" x2="590" y2="410" class="line"/>
+  <text x="88" y="448" class="body">+ alterarDados(nome, nomeUsuario, email): void</text>
+  <text x="88" y="482" class="body">+ verificarSenha(senha): boolean</text>
+
+  <!-- Tarefa -->
+  <rect x="785" y="170" width="315" height="540" rx="8" class="box"/>
+  <rect x="785" y="170" width="315" height="55" rx="8" fill="#dce8ff"/>
+  <text x="942" y="206" text-anchor="middle" class="name">Tarefa</text>
+  <line x1="785" y1="225" x2="1100" y2="225" class="line"/>
+  <text x="806" y="257" class="body">+ id: Long</text>
+  <text x="806" y="288" class="body">+ titulo: String</text>
+  <text x="806" y="319" class="body">+ descricao: String</text>
+  <text x="806" y="350" class="body">+ criador: Usuario</text>
+  <text x="806" y="381" class="body">+ responsavel: Usuario</text>
+  <text x="806" y="412" class="body">+ prazo: LocalDate</text>
+  <text x="806" y="443" class="body">+ prioridade: PrioridadeTarefa</text>
+  <text x="806" y="474" class="body">+ status: StatusTarefa</text>
+  <text x="806" y="505" class="body">+ criadaEm: LocalDateTime</text>
+  <line x1="785" y1="530" x2="1100" y2="530" class="line"/>
+  <text x="806" y="564" class="body">+ editarDados(...): void</text>
+  <text x="806" y="599" class="body">+ atribuirA(usuario): void</text>
+  <text x="806" y="634" class="body">+ alterarStatus(status): void</text>
+
+  <!-- Status -->
+  <rect x="1220" y="160" width="250" height="205" rx="8" class="box"/>
+  <rect x="1220" y="160" width="250" height="70" rx="8" fill="#e5ddff"/>
+  <text x="1345" y="184" text-anchor="middle" class="small">«enumeration»</text>
+  <text x="1345" y="213" text-anchor="middle" class="name">StatusTarefa</text>
+  <line x1="1220" y1="230" x2="1470" y2="230" class="line"/>
+  <text x="1240" y="265" class="body">PENDENTE</text>
+  <text x="1240" y="300" class="body">EM_ANDAMENTO</text>
+  <text x="1240" y="335" class="body">CONCLUIDA</text>
+
+  <!-- Priority -->
+  <rect x="1220" y="445" width="250" height="205" rx="8" class="box"/>
+  <rect x="1220" y="445" width="250" height="70" rx="8" fill="#e5ddff"/>
+  <text x="1345" y="469" text-anchor="middle" class="small">«enumeration»</text>
+  <text x="1345" y="498" text-anchor="middle" class="name">PrioridadeTarefa</text>
+  <line x1="1220" y1="515" x2="1470" y2="515" class="line"/>
+  <text x="1240" y="550" class="body">BAIXA</text>
+  <text x="1240" y="585" class="body">MEDIA</text>
+  <text x="1240" y="620" class="body">ALTA</text>
+
+  <rect x="65" y="760" width="1405" height="80" rx="10" fill="#fff" stroke="#d6dfeb"/>
+  <text x="88" y="793" class="body">Cada tarefa tem um criador, um responsável, um status e uma prioridade.</text>
+  <text x="88" y="823" class="small">Um usuário pode criar e receber várias tarefas; criador e responsável podem ser a mesma pessoa.</text>
+</svg>
