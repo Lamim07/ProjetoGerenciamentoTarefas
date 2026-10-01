@@ -16,6 +16,10 @@ Inicie a instância SQL Server e habilite TCP/IP. A URL padrão usa `localhost:1
 
 ## Configurar e executar no PowerShell
 
+Nesta instalação, abra `iniciar-aplicativo.cmd` com duplo clique no Explorador de Arquivos. O iniciador configura a conexão local com SQL Server e chama `executar.ps1`. A senha fica em `credenciais-sql.dat`, protegida para a conta Windows que criou o arquivo; não copie esse arquivo para outra máquina ou usuário esperando que funcione.
+
+Para configurar manualmente em outro ambiente:
+
 ```powershell
 $env:TAREFAS_DB_URL = 'jdbc:sqlserver://localhost:1433;databaseName=GerenciamentoTarefas;encrypt=true;trustServerCertificate=true'
 $env:TAREFAS_DB_USER = 'seu_usuario_sql'

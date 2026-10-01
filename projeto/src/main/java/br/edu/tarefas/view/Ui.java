@@ -5,6 +5,7 @@ import javax.swing.*;
 
 final class Ui {
     static final Color AZUL = new Color(49, 93, 220);
+    static final Color AZUL_CLARO = new Color(220, 232, 255);
     static final Color ESCURO = new Color(32, 48, 71);
     static final Color FUNDO = new Color(238, 242, 248);
     private Ui() { }
@@ -13,7 +14,8 @@ final class Ui {
         JButton b = new JButton(texto);
         b.setFont(new Font("Segoe UI", Font.BOLD, 14));
         b.setFocusPainted(false);
-        if (primario) { b.setBackground(AZUL); b.setForeground(Color.WHITE); }
+        b.setForeground(Color.BLACK);
+        if (primario) b.setBackground(AZUL_CLARO);
         return b;
     }
 
