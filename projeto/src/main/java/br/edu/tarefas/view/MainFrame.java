@@ -18,6 +18,7 @@ public final class MainFrame extends JFrame {
     private final JTable tabela = new JTable();
     private List<Tarefa> exibidas = List.of();
     private boolean criadas;
+    private boolean emListagem;
 
     public MainFrame(AppController controller, Usuario usuario) {
         super("Gerenciamento de Tarefas");
@@ -43,10 +44,12 @@ public final class MainFrame extends JFrame {
         nav.add(navButton("Tarefas recebidas", () -> listar(false)));
         nav.add(Box.createVerticalStrut(10));
         nav.add(navButton("Tarefas criadas", () -> listar(true)));
+        nav.add(Box.createVerticalStrut(10));
+        nav.add(navButton("Categorias", this::abrirCategorias));
         root.add(nav, BorderLayout.WEST);
         tabela.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) abrirTarefa(selecionada(), true);
+                if (e.getClickCount() == 2) abrirDetalhes(selecionada());
             }
         });
         centro.setBackground(Color.WHITE);
@@ -64,6 +67,7 @@ public final class MainFrame extends JFrame {
     }
 
     private void visaoGeral() {
+        emListagem = false;
         centro.removeAll(); titulo.setText("Visão geral");
         centro.add(titulo, BorderLayout.NORTH);
         JPanel cards = new JPanel(new GridLayout(2, 2, 18, 18)); cards.setOpaque(false);
@@ -73,15 +77,18 @@ public final class MainFrame extends JFrame {
         criadasBotao.addActionListener(e -> listar(true));
         JButton nova = Ui.botao("+ Nova tarefa", true);
         nova.addActionListener(e -> abrirTarefa(null, false));
+        JButton categorias = Ui.botao("Gerenciar categorias", false);
+        categorias.addActionListener(e -> abrirCategorias());
         cards.add(recebidas); cards.add(criadasBotao); cards.add(nova);
-        cards.add(new JLabel("Organize, atribua e acompanhe suas tarefas."));
+        cards.add(categorias);
         centro.add(cards, BorderLayout.CENTER); atualizarTela();
     }
 
     private void listar(boolean criadas) {
         this.criadas = criadas;
-        try { exibidas = criadas ? controller.tarefas().criadas(usuario) : controller.tarefas().recebidas(usuario); }
+        try { exibidas = criadas ? controller.tarefas().criadas() : controller.tarefas().recebidas(); }
         catch (Exception ex) { Ui.erro(this, ex); return; }
+        emListagem = true;
         centro.removeAll();
         JPanel cabecalho = new JPanel(new BorderLayout()); cabecalho.setOpaque(false);
         titulo.setText(criadas ? "Tarefas criadas" : "Tarefas recebidas");
@@ -90,17 +97,18 @@ public final class MainFrame extends JFrame {
         nova.addActionListener(e -> abrirTarefa(null, false));
         cabecalho.add(nova, BorderLayout.EAST); centro.add(cabecalho, BorderLayout.NORTH);
 
-        String[] colunas = {"Título", "Responsável", "Criador", "Prazo", "Prioridade", "Status"};
+        String[] colunas = {"Título", "Categoria", "Responsável", "Criador", "Prazo", "Prioridade", "Status"};
         DefaultTableModel modelo = new DefaultTableModel(colunas, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
-        for (Tarefa t : exibidas) modelo.addRow(new Object[]{t.titulo(), t.responsavel().nome(),
+        for (Tarefa t : exibidas) modelo.addRow(new Object[]{t.titulo(), t.categoria().nome(), t.responsavel().nome(),
                 t.criador().nome(), DATA.format(t.prazo()), t.prioridade(), t.status()});
         tabela.setModel(modelo); tabela.setRowHeight(32); tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setAutoCreateRowSorter(true);
         tabela.getTableHeader().setReorderingAllowed(false);
         centro.add(new JScrollPane(tabela), BorderLayout.CENTER);
-        JButton ver = Ui.botao("Visualizar", false); ver.addActionListener(e -> abrirTarefa(selecionada(), true));
+        JButton ver = Ui.botao("Visualizar / comentários", false);
+        ver.addActionListener(e -> abrirDetalhes(selecionada()));
         JButton editar = Ui.botao("Editar / status", false); editar.addActionListener(e -> abrirTarefa(selecionada(), false));
         JButton excluir = Ui.botao("Excluir", false); excluir.addActionListener(e -> excluirSelecionada());
         JButton atualizar = Ui.botao("Atualizar", false); atualizar.addActionListener(e -> listar(this.criadas));
@@ -124,6 +132,22 @@ public final class MainFrame extends JFrame {
         } catch (Exception ex) { Ui.erro(this, ex); }
     }
 
+    private void abrirDetalhes(Tarefa tarefa) {
+        if (tarefa == null) return;
+        try {
+            TaskDetailsDialog dialog = new TaskDetailsDialog(this, controller.tarefas(),
+                    controller.comentarios(), usuario, tarefa);
+            dialog.setVisible(true);
+            if (dialog.tarefaFoiAlterada()) listar(criadas);
+        } catch (Exception ex) { Ui.erro(this, ex); }
+    }
+
+    private void abrirCategorias() {
+        CategoryDialog dialog = new CategoryDialog(this, controller.categorias());
+        dialog.setVisible(true);
+        if (dialog.foiModificada() && emListagem) listar(criadas);
+    }
+
     private void excluirSelecionada() {
         Tarefa t = selecionada(); if (t == null) return;
         if (t.criador().id() != usuario.id()) {
@@ -131,7 +155,7 @@ public final class MainFrame extends JFrame {
         }
         if (JOptionPane.showConfirmDialog(this, "Excluir a tarefa \"" + t.titulo() + "\"?",
                 "Confirmar exclusão", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-        try { controller.tarefas().excluir(usuario, t); listar(criadas); }
+        try { controller.tarefas().excluir(t); listar(criadas); }
         catch (Exception ex) { Ui.erro(this, ex); }
     }
 

@@ -10,10 +10,12 @@ public final class TarefaDao {
     private static final String SELECT = """
         SELECT t.id,t.titulo,t.descricao,t.prazo,t.prioridade,t.status,t.criada_em,
                c.id AS c_id,c.nome AS c_nome,c.nome_usuario AS c_usuario,c.email AS c_email,
-               r.id AS r_id,r.nome AS r_nome,r.nome_usuario AS r_usuario,r.email AS r_email
+               r.id AS r_id,r.nome AS r_nome,r.nome_usuario AS r_usuario,r.email AS r_email,
+               ca.id AS categoria_id,ca.nome AS categoria_nome,ca.descricao AS categoria_descricao
         FROM dbo.tarefas t
         JOIN dbo.usuarios c ON c.id=t.criador_id
         JOIN dbo.usuarios r ON r.id=t.responsavel_id
+        JOIN dbo.categorias ca ON ca.id=t.categoria_id
         """;
 
     public List<Tarefa> listarCriadas(long usuarioId) throws SQLException {
@@ -45,22 +47,22 @@ public final class TarefaDao {
     }
 
     public void inserir(Tarefa t) throws SQLException {
-        String sql = "INSERT INTO dbo.tarefas(titulo,descricao,criador_id,responsavel_id,prazo,prioridade,status) VALUES(?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO dbo.tarefas(titulo,descricao,criador_id,responsavel_id,categoria_id,prazo,prioridade,status) VALUES(?,?,?,?,?,?,?,?)";
         try (Connection c = ConnectionFactory.abrir(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, t.titulo()); ps.setString(2, t.descricao());
             ps.setLong(3, t.criador().id()); ps.setLong(4, t.responsavel().id());
-            ps.setDate(5, Date.valueOf(t.prazo())); ps.setString(6, t.prioridade().name());
-            ps.setString(7, t.status().name()); ps.executeUpdate();
+            ps.setLong(5, t.categoria().id()); ps.setDate(6, Date.valueOf(t.prazo()));
+            ps.setString(7, t.prioridade().name()); ps.setString(8, t.status().name()); ps.executeUpdate();
         }
     }
 
     public void atualizarDados(Tarefa t) throws SQLException {
-        String sql = "UPDATE dbo.tarefas SET titulo=?,descricao=?,responsavel_id=?,prazo=?,prioridade=?,status=? WHERE id=? AND criador_id=?";
+        String sql = "UPDATE dbo.tarefas SET titulo=?,descricao=?,responsavel_id=?,categoria_id=?,prazo=?,prioridade=?,status=? WHERE id=? AND criador_id=?";
         try (Connection c = ConnectionFactory.abrir(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, t.titulo()); ps.setString(2, t.descricao());
-            ps.setLong(3, t.responsavel().id()); ps.setDate(4, Date.valueOf(t.prazo()));
-            ps.setString(5, t.prioridade().name()); ps.setString(6, t.status().name());
-            ps.setLong(7, t.id()); ps.setLong(8, t.criador().id());
+            ps.setLong(3, t.responsavel().id()); ps.setLong(4, t.categoria().id());
+            ps.setDate(5, Date.valueOf(t.prazo())); ps.setString(6, t.prioridade().name());
+            ps.setString(7, t.status().name()); ps.setLong(8, t.id()); ps.setLong(9, t.criador().id());
             if (ps.executeUpdate() != 1) throw new SQLException("Tarefa não encontrada para edição.");
         }
     }
@@ -86,8 +88,10 @@ public final class TarefaDao {
                 rs.getString("c_email"), "");
         Usuario r = new Usuario(rs.getLong("r_id"), rs.getString("r_nome"), rs.getString("r_usuario"),
                 rs.getString("r_email"), "");
+        Categoria categoria = new Categoria(rs.getLong("categoria_id"), rs.getString("categoria_nome"),
+                rs.getString("categoria_descricao"));
         return new Tarefa(rs.getLong("id"), rs.getString("titulo"), rs.getString("descricao"), c, r,
-                rs.getDate("prazo").toLocalDate(), PrioridadeTarefa.valueOf(rs.getString("prioridade")),
+                categoria, rs.getDate("prazo").toLocalDate(), PrioridadeTarefa.valueOf(rs.getString("prioridade")),
                 StatusTarefa.valueOf(rs.getString("status")), rs.getTimestamp("criada_em").toLocalDateTime());
     }
 }

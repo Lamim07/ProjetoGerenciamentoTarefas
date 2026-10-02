@@ -1,7 +1,7 @@
 package br.edu.tarefas.view;
 
 import br.edu.tarefas.model.*;
-import br.edu.tarefas.service.TarefaService;
+import br.edu.tarefas.controller.TarefaController;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,21 +15,29 @@ public final class TaskDialog extends JDialog {
     private final JTextField titulo = new JTextField();
     private final JTextArea descricao = new JTextArea(5, 30);
     private final JComboBox<Usuario> responsavel = new JComboBox<>();
+    private final JComboBox<Categoria> categoria = new JComboBox<>();
     private final JTextField prazo = new JTextField();
     private final JComboBox<PrioridadeTarefa> prioridade = new JComboBox<>(PrioridadeTarefa.values());
     private final JComboBox<StatusTarefa> status = new JComboBox<>(StatusTarefa.values());
     private boolean salva;
 
-    public TaskDialog(JFrame owner, TarefaService service, Usuario ator, Tarefa tarefa,
+    public TaskDialog(JFrame owner, TarefaController controller, Usuario ator, Tarefa tarefa,
                       boolean somenteLeitura) throws Exception {
         super(owner, tarefa == null ? "Nova tarefa" : somenteLeitura ? "Visualizar tarefa" : "Editar tarefa", true);
-        setSize(680, 660); setMinimumSize(new Dimension(590, 550)); setLocationRelativeTo(owner);
-        List<Usuario> usuarios = service.usuarios();
+        setSize(700, 700); setMinimumSize(new Dimension(590, 600)); setLocationRelativeTo(owner);
+        List<Usuario> usuarios = controller.usuarios();
         for (Usuario u : usuarios) responsavel.addItem(u);
-        if (tarefa == null) selecionarUsuario(ator.id());
+        List<Categoria> categorias = controller.categorias();
+        for (Categoria c : categorias) categoria.addItem(c);
+        if (tarefa == null) {
+            selecionarUsuario(ator.id());
+            categorias.stream().filter(c -> "Geral".equalsIgnoreCase(c.nome())).findFirst()
+                    .ifPresent(c -> selecionarCategoria(c.id()));
+        }
         else {
             titulo.setText(tarefa.titulo()); descricao.setText(tarefa.descricao());
             selecionarUsuario(tarefa.responsavel().id());
+            selecionarCategoria(tarefa.categoria().id());
             prazo.setText(DATA.format(tarefa.prazo())); prioridade.setSelectedItem(tarefa.prioridade());
             status.setSelectedItem(tarefa.status());
         }
@@ -37,7 +45,8 @@ public final class TaskDialog extends JDialog {
         boolean podeStatus = tarefa != null && tarefa.responsavel().id() == ator.id();
         boolean editarDados = !somenteLeitura && criador;
         titulo.setEditable(editarDados); descricao.setEditable(editarDados);
-        responsavel.setEnabled(editarDados); prazo.setEditable(editarDados); prioridade.setEnabled(editarDados);
+        responsavel.setEnabled(editarDados); categoria.setEnabled(editarDados);
+        prazo.setEditable(editarDados); prioridade.setEnabled(editarDados);
         status.setEnabled(!somenteLeitura && podeStatus);
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -50,6 +59,7 @@ public final class TaskDialog extends JDialog {
         descricao.setLineWrap(true); descricao.setWrapStyleWord(true);
         campo(form, g, "Descrição", new JScrollPane(descricao));
         campo(form, g, "Responsável / destinatário", responsavel);
+        campo(form, g, "Categoria", categoria);
         campo(form, g, "Prazo (dd/mm/aaaa)", prazo);
         campo(form, g, "Prioridade", prioridade);
         campo(form, g, "Status", status);
@@ -60,14 +70,15 @@ public final class TaskDialog extends JDialog {
         salvar.addActionListener(e -> {
             try {
                 if (tarefa == null) {
-                    service.criar(ator, titulo.getText(), descricao.getText(),
-                            (Usuario) responsavel.getSelectedItem(), lerPrazo(), (PrioridadeTarefa) prioridade.getSelectedItem());
+                    controller.criar(titulo.getText(), descricao.getText(),
+                            (Usuario) responsavel.getSelectedItem(), (Categoria) categoria.getSelectedItem(),
+                            lerPrazo(), (PrioridadeTarefa) prioridade.getSelectedItem());
                 } else if (criador) {
-                    service.editar(ator, tarefa, titulo.getText(), descricao.getText(),
-                            (Usuario) responsavel.getSelectedItem(), lerPrazo(),
+                    controller.editar(tarefa, titulo.getText(), descricao.getText(),
+                            (Usuario) responsavel.getSelectedItem(), (Categoria) categoria.getSelectedItem(), lerPrazo(),
                             (PrioridadeTarefa) prioridade.getSelectedItem(), (StatusTarefa) status.getSelectedItem());
                 } else {
-                    service.alterarStatus(ator, tarefa, (StatusTarefa) status.getSelectedItem());
+                    controller.alterarStatus(tarefa, (StatusTarefa) status.getSelectedItem());
                 }
                 salva = true; dispose();
             } catch (Exception ex) { Ui.erro(this, ex); }
@@ -86,6 +97,12 @@ public final class TaskDialog extends JDialog {
     private void selecionarUsuario(long id) {
         for (int i = 0; i < responsavel.getItemCount(); i++) {
             if (responsavel.getItemAt(i).id() == id) { responsavel.setSelectedIndex(i); return; }
+        }
+    }
+
+    private void selecionarCategoria(long id) {
+        for (int i = 0; i < categoria.getItemCount(); i++) {
+            if (categoria.getItemAt(i).id() == id) { categoria.setSelectedIndex(i); return; }
         }
     }
 

@@ -1,0 +1,7 @@
+# Dados locais e resultados de compilação
+credenciais-sql.dat
+build/
+target/
+
+# Scripts SQL executados e retirados da entrega
+sql/
